@@ -206,7 +206,7 @@ clearSelectionsBtn.addEventListener("click", () => {
     .forEach((card) => card.classList.remove("selected"));
 });
 
-/* Cloudflare Worker endpoint (replace with your real URL) */
+/* Cloudflare Worker endpoint */
 const WORKER_URL = "https://loreal-routine-worker.saquicpablom1.workers.dev/";
 
 /* Generate routine */
@@ -307,6 +307,21 @@ rtlToggle.addEventListener("click", () => {
   const html = document.documentElement;
   html.dir = html.dir === "rtl" ? "ltr" : "rtl";
 });
+
+/* ⭐ Floating Quick Generate Routine Button */
+const quickGenerateBtn = document.getElementById("quickGenerate");
+
+if (quickGenerateBtn) {
+  quickGenerateBtn.addEventListener("click", () => {
+    generateRoutineBtn.click();
+
+    // ⭐ Scroll user to chatbox after generating
+    const chatSection = document.querySelector(".chatbox");
+    if (chatSection) {
+      chatSection.scrollIntoView({ behavior: "smooth" });
+    }
+  });
+}
 
 /* Init */
 (async function init() {
