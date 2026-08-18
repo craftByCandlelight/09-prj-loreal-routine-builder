@@ -118,6 +118,11 @@ body {
 }
 
 /* product cards */
+@keyframes cardFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .product-card {
   background: white;
   border-radius: 14px;
@@ -129,10 +134,11 @@ body {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   border: 1px solid #eee;
+  animation: cardFade 0.5s ease-out;
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(1.02);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
@@ -272,13 +278,20 @@ body {
   background: #444;
 }
 
-/* chat section */
+/* CHATBOX */
+@keyframes chatboxEnter {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .chatbox {
   margin: 40px 0;
-  border-radius: 16px;
-  padding: 26px;
+  border-radius: 20px;
+  padding: 30px;
   background: #ffffff;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  animation: chatboxEnter 0.6s ease-out;
 }
 
 .chatbox h2 {
@@ -292,37 +305,102 @@ body {
   margin-bottom: 16px;
 }
 
+/* Glassmorphism Chat Window */
 .chat-window {
   padding: 20px;
   font-size: 16px;
-  line-height: 1.5;
-  height: 260px;
+  line-height: 1.55;
+  height: 300px;
   overflow-y: auto;
-  background: #fafafa;
-  margin-bottom: 20px;
-  border-radius: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  animation: fadeIn 0.6s ease-out;
 }
 
-/* chat messages */
+/* Message Bubbles */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .chat-message {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  animation: slideIn 0.45s ease-out;
 }
 
 .chat-message.user {
-  background: var(--loreal-gold);
+  background: linear-gradient(135deg, var(--loreal-gold), #f7e7b2);
   color: #000;
-  padding: 12px 16px;
-  border-radius: 16px;
+  padding: 14px 18px;
+  border-radius: 18px;
   max-width: 80%;
   margin-left: auto;
+  box-shadow: 0 4px 14px rgba(227, 165, 53, 0.35);
 }
 
 .chat-message.assistant {
-  background: var(--loreal-red);
+  background: linear-gradient(135deg, var(--loreal-red), #ff4f6b);
   color: #fff;
-  padding: 12px 16px;
-  border-radius: 16px;
+  padding: 14px 18px;
+  border-radius: 18px;
   max-width: 80%;
+  box-shadow: 0 4px 14px rgba(255, 0, 59, 0.35);
+}
+
+/* ⭐ AI Typing Indicator — Animated Dots Only */
+.typing-indicator,
+.selection-loading,
+.generate-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.selection-loading {
+  padding: 6px 10px;
+  margin-top: 10px;
+}
+
+.generate-loading {
+  padding: 12px 16px;
+  margin-top: 14px;
+}
+
+.typing-indicator span,
+.selection-loading span,
+.generate-loading span {
+  width: 8px;
+  height: 8px;
+  background: var(--loreal-red);
+  border-radius: 50%;
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2),
+.selection-loading span:nth-child(2),
+.generate-loading span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-indicator span:nth-child(3),
+.selection-loading span:nth-child(3),
+.generate-loading span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typingBounce {
+  0% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-6px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0.4; }
 }
 
 /* input row */
@@ -365,9 +443,14 @@ body {
   background: #666666;
 }
 
-.chat-form button:focus {
-  outline: 2px solid #000;
-  outline-offset: 2px;
+.chat-form button:active {
+  animation: press 0.15s ease-out;
+}
+
+@keyframes press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.94); }
+  100% { transform: scale(1); }
 }
 
 /* visually hidden */
@@ -409,7 +492,7 @@ body {
   color: #fff;
 }
 
-/* ⭐ NEW FLOATING QUICK GENERATE BUTTON */
+/* Floating Quick Generate Button */
 .floating-btn {
   position: fixed;
   bottom: 20px;
@@ -430,21 +513,25 @@ body {
   z-index: 9999;
 }
 
-.floating-btn:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+@keyframes pulseGlow {
+  0% { transform: scale(1); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25); }
+  50% { transform: scale(1.06); box-shadow: 0 14px 34px rgba(255, 0, 59, 0.35); }
+  100% { transform: scale(1); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25); }
+}
+
+.floating-btn.pulse {
+  animation: pulseGlow 1.6s ease-in-out infinite;
+}
+
+.floating-btn.clicked {
+  transform: scale(1.12);
+  box-shadow: 0 18px 40px rgba(255, 0, 59, 0.45);
 }
 
 /* animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* RTL support */

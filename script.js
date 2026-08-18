@@ -8,6 +8,7 @@ const selectedProductsList = document.getElementById("selectedProductsList");
 const generateRoutineBtn = document.getElementById("generateRoutine");
 const clearSelectionsBtn = document.getElementById("clearSelections");
 const rtlToggle = document.getElementById("rtlToggle");
+const quickGenerateBtn = document.getElementById("quickGenerate");
 
 /* State */
 let allProducts = [];
@@ -40,7 +41,7 @@ productsContainer.innerHTML = `
   </div>
 `;
 
-/* Load product data from JSON file */
+/* Load product data */
 async function loadProducts() {
   if (allProducts.length) return allProducts;
   const response = await fetch("products.json");
@@ -95,9 +96,7 @@ function displayProducts(products) {
       <div class="product-info">
         <h3>${product.name}</h3>
         <p>${product.brand}</p>
-        <button class="toggle-description" type="button">
-          Details
-        </button>
+        <button class="toggle-description" type="button">Details</button>
         <div class="product-description">
           <p>${product.description}</p>
         </div>
@@ -110,7 +109,7 @@ function displayProducts(products) {
   attachCardEvents();
 }
 
-/* Attach events to cards after render */
+/* Attach events to cards */
 function attachCardEvents() {
   productsContainer.querySelectorAll(".product-card").forEach((card) => {
     const id = Number(card.dataset.id);
@@ -134,8 +133,6 @@ function attachCardEvents() {
     });
 
     const toggleBtn = card.querySelector(".toggle-description");
-    const desc = card.querySelector(".product-description");
-
     toggleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       card.classList.toggle("show-description");
@@ -143,14 +140,12 @@ function attachCardEvents() {
   });
 }
 
-/* Combined filter: category + search */
+/* Apply filters */
 function applyFilters() {
   let products = allProducts.slice();
 
   if (currentCategory) {
-    products = products.filter(
-      (product) => product.category === currentCategory
-    );
+    products = products.filter((product) => product.category === currentCategory);
   }
 
   if (currentSearchTerm) {
@@ -166,21 +161,21 @@ function applyFilters() {
   displayProducts(products);
 }
 
-/* Category change */
+/* Category filter */
 categoryFilter.addEventListener("change", async (e) => {
   await loadProducts();
   currentCategory = e.target.value;
   applyFilters();
 });
 
-/* Product search */
+/* Search filter */
 productSearch.addEventListener("input", async (e) => {
   await loadProducts();
   currentSearchTerm = e.target.value.trim();
   applyFilters();
 });
 
-/* Remove from selected list */
+/* Remove selected product */
 selectedProductsList.addEventListener("click", (e) => {
   if (!e.target.classList.contains("remove-selected")) return;
 
@@ -195,7 +190,7 @@ selectedProductsList.addEventListener("click", (e) => {
   if (card) card.classList.remove("selected");
 });
 
-/* Clear all selections */
+/* Clear selections */
 clearSelectionsBtn.addEventListener("click", () => {
   selectedProducts = [];
   saveSelections();
@@ -206,17 +201,35 @@ clearSelectionsBtn.addEventListener("click", () => {
     .forEach((card) => card.classList.remove("selected"));
 });
 
-/* Cloudflare Worker endpoint */
+/* Worker endpoint */
 const WORKER_URL = "https://loreal-routine-worker.saquicpablom1.workers.dev/";
 
-/* Generate routine */
+/* Auto-scroll helper */
+function scrollChatToBottom() {
+  setTimeout(() => {
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }, 120);
+}
+
+/* ⭐ Generate routine */
 generateRoutineBtn.addEventListener("click", async () => {
   if (!selectedProducts.length) {
-    chatWindow.innerHTML = `<div class="chat-message assistant"><p>Please select at least one product before generating a routine.</p></div>`;
+    chatWindow.innerHTML = `
+      <div class="chat-message assistant">
+        <p>Please select at least one product before generating a routine.</p>
+      </div>
+    `;
+    scrollChatToBottom();
     return;
   }
 
-  chatWindow.innerHTML = `<div class="chat-message assistant"><p>Generating your routine…</p></div>`;
+  /* ⭐ GENERATE ROUTINE LOADING DOTS */
+  chatWindow.innerHTML = `
+    <div class="generate-loading">
+      <span></span><span></span><span></span>
+    </div>
+  `;
+  scrollChatToBottom();
 
   try {
     const response = await fetch(WORKER_URL, {
@@ -230,10 +243,11 @@ generateRoutineBtn.addEventListener("click", async () => {
     });
 
     const result = await response.json();
-    const routineText =
-      result.routine || "Sorry, I couldn’t generate a routine.";
+    const routineText = result.routine || "Sorry, I couldn’t generate a routine.";
 
     chatHistory.push({ role: "assistant", content: routineText });
+
+    chatWindow.querySelector(".generate-loading")?.remove();
 
     chatWindow.innerHTML = `
       <div class="chat-message assistant">
@@ -241,16 +255,20 @@ generateRoutineBtn.addEventListener("click", async () => {
         <p>${routineText}</p>
       </div>
     `;
-  } catch (err) {
+    scrollChatToBottom();
+  } catch {
+    chatWindow.querySelector(".generate-loading")?.remove();
+
     chatWindow.innerHTML = `
       <div class="chat-message assistant">
         <p>There was an error generating your routine. Please try again.</p>
       </div>
     `;
+    scrollChatToBottom();
   }
 });
 
-/* Chat follow-up */
+/* ⭐ Chat follow-up */
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const input = document.getElementById("userInput");
@@ -259,14 +277,14 @@ chatForm.addEventListener("submit", async (e) => {
 
   chatHistory.push({ role: "user", content: userMessage });
 
+  /* ⭐ AI TYPING DOTS */
   chatWindow.innerHTML += `
-    <div class="chat-message user">
-      <p>${userMessage}</p>
-    </div>
-    <div class="chat-message assistant">
-      <p>Thinking…</p>
+    <div class="chat-message user"><p>${userMessage}</p></div>
+    <div class="typing-indicator">
+      <span></span><span></span><span></span>
     </div>
   `;
+  scrollChatToBottom();
 
   input.value = "";
 
@@ -288,17 +306,21 @@ chatForm.addEventListener("submit", async (e) => {
 
     chatHistory.push({ role: "assistant", content: answer });
 
+    chatWindow.querySelector(".typing-indicator")?.remove();
+
     chatWindow.innerHTML += `
-      <div class="chat-message assistant">
-        <p>${answer}</p>
-      </div>
+      <div class="chat-message assistant"><p>${answer}</p></div>
     `;
-  } catch (err) {
+    scrollChatToBottom();
+  } catch {
+    chatWindow.querySelector(".typing-indicator")?.remove();
+
     chatWindow.innerHTML += `
       <div class="chat-message assistant">
         <p>There was an error answering your question. Please try again.</p>
       </div>
     `;
+    scrollChatToBottom();
   }
 });
 
@@ -309,17 +331,19 @@ rtlToggle.addEventListener("click", () => {
 });
 
 /* ⭐ Floating Quick Generate Routine Button */
-const quickGenerateBtn = document.getElementById("quickGenerate");
-
 if (quickGenerateBtn) {
+  quickGenerateBtn.classList.add("pulse");
+
   quickGenerateBtn.addEventListener("click", () => {
     generateRoutineBtn.click();
 
-    // ⭐ Scroll user to chatbox after generating
     const chatSection = document.querySelector(".chatbox");
     if (chatSection) {
       chatSection.scrollIntoView({ behavior: "smooth" });
     }
+
+    quickGenerateBtn.classList.add("clicked");
+    setTimeout(() => quickGenerateBtn.classList.remove("clicked"), 600);
   });
 }
 
